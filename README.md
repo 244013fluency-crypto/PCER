@@ -330,7 +330,7 @@ A complete attack experiment should additionally specify:
 After the final experiment entry script is selected, the corresponding command can be added here, for example:
 
 ```bash
-python <experiment_script>.py
+python pcer.py
 ```
 
 ---
