@@ -53,19 +53,19 @@ PCER consists of four key components.
 
 Evaluating every modifiable position and its substitution candidates may introduce substantial query overhead. To reduce the query overhead of position selection, PCER employs a prior-guided dynamic candidate-aware ranking mechanism.
 
-PCER first filters stopwords, low-value function words, and invalid positions, while assigning higher priorities to task-relevant words. For each retained position \(i\), PCER considers three factors:
+PCER first filters stopwords, low-value function words, and invalid positions, while assigning higher priorities to task-relevant words. For each retained position $i$, PCER considers three factors:
 
-- the Word Importance Ranking (WIR) score \(W_i\);
-- the prior score \(P_i\); and
-- the candidate utility \(U_i\), obtained by probing a small number of substitution candidates.
+- the Word Importance Ranking (WIR) score $W_i$;
+- the prior score $P_i$; and
+- the candidate utility $U_i$, obtained by probing a small number of substitution candidates.
 
 The final position score is defined as:
 
-\[
-R_i = \lambda_W W_i + \lambda_P P_i + \lambda_U U_i ,
-\]
+```math
+R_i = \lambda_W W_i + \lambda_P P_i + \lambda_U U_i
+```
 
-where \(\lambda_W\), \(\lambda_P\), and \(\lambda_U\) control the contributions of word importance, prior information, and candidate utility, respectively. Positions are searched in descending order of \(R_i\).
+where $\lambda_W$, $\lambda_P$, and $\lambda_U$ control the contributions of word importance, prior information, and candidate utility, respectively. Positions are searched in descending order of $R_i$.
 
 PCER further uses dynamic candidate awareness to avoid repeated candidate probing. Candidate probing is performed over all retained positions at initialization and after a predefined number of accumulated modifications. During intermediate iterations, probing is restricted to high-ranked positions. Previously evaluated candidates and their responses are cached and reused, reducing unnecessary queries while allowing the ranking to adapt to the current search state.
 
@@ -73,36 +73,37 @@ PCER further uses dynamic candidate awareness to avoid repeated candidate probin
 
 Although the above ranking mechanism prioritizes promising positions, their substitution candidates may still be ineffective. PCER therefore introduces a stagnation-triggered candidate neighborhood expansion mechanism.
 
-PCER uses WordNet as the default candidate space. A position is regarded as locally stagnant when it has no valid candidate or when none of its candidates improves the current attack state. Let \(\mathcal{C}_i\) denote the default candidate set of word \(w_i\), and let
+PCER uses WordNet as the default candidate space. A position is regarded as locally stagnant when it has no valid candidate or when none of its candidates improves the current attack state. Let $\mathcal{C}_i$ denote the default candidate set of word $w_i$, and let
 
-\[
+```math
 \Delta_i =
 \max_{w' \in \mathcal{C}_i}
-\left[S(I_{i \leftarrow w'}) - S(I)\right]
-\]
+\left[
+S(I_{i \leftarrow w'}) - S(I)
+\right]
+```
 
 denote the maximum local improvement. The candidate set used for substitution is:
 
-\[
+```math
 \mathcal{C}_i^{\star} =
 \begin{cases}
 \mathcal{C}_i,
-& \mathcal{C}_i \neq \emptyset \ \land\ \Delta_i > 0, \\
+& \mathcal{C}_i \neq \emptyset \land \Delta_i > 0, \\
 \operatorname{Expand}(w_i),
 & \text{otherwise}.
 \end{cases}
-\]
+```
 
 Instead of using a uniformly enlarged candidate space, PCER activates candidate neighborhood expansion only when the default neighborhood becomes unproductive. Expanded candidates are evaluated under the same attack constraints, and ineffective expansions are not repeatedly invoked.
-
 
 ### 3. Nearest-Checkpoint Path Backtracking
 
 Candidate neighborhood expansion improves local exploration, but promising alternative states may still be discarded during best-first search. PCER therefore introduces nearest-checkpoint path backtracking to preserve and revisit such alternatives.
 
-Given the current state \(I\) and the global best state \(I^\star\), PCER stores locally improving children that do not exceed the current global best as backup branches:
+Given the current state $I$ and the global best state $I^\star$, PCER stores locally improving children that do not exceed the current global best as backup branches:
 
-\[
+```math
 \mathcal{B}_I =
 \left\{
 I' \in \operatorname{Child}(I)
@@ -110,17 +111,17 @@ I' \in \operatorname{Child}(I)
 S(I') > S(I),
 \;
 S(I') \leq S(I^\star)
-\right\}.
-\]
+\right\}
+```
 
 When backtracking is activated, PCER selects the highest-scoring unused backup branch from the nearest available checkpoint:
 
-\[
+```math
 I_{\mathrm{bt}}
 =
 \arg\max_{I' \in \mathcal{B}_{\mathrm{near}}}
-S(I').
-\]
+S(I')
+```
 
 A checkpoint is created only when its backup set is nonempty. When the global best remains unchanged for several expansions or the priority queue becomes empty, PCER resumes the search from the nearest available checkpoint. The numbers of retained checkpoints and backtracking operations are bounded to avoid excessive exploration and repeated backtracking.
 
@@ -130,20 +131,21 @@ After the search obtains a successful adversarial example, redundant substitutio
 
 PCER revisits each modified position and first attempts to restore the perturbed word to its original form. The restoration is accepted only if the resulting example still satisfies the attack success condition.
 
-If direct restoration fails, PCER considers synonyms of the original word and selects a candidate that is lexically closer to the original word. Let \(w_i^0\) and \(\tilde{w}_i\) denote the original and currently perturbed words at position \(i\), respectively. The recovery candidate is selected as:
+If direct restoration fails, PCER considers synonyms of the original word and selects a candidate that is lexically closer to the original word. Let $w_i^0$ and $\tilde{w}_i$ denote the original and currently perturbed words at position $i$, respectively. The recovery candidate is selected as:
 
-\[
+```math
 \hat{w}_i =
 \arg\min_{w \in \mathcal{C}(w_i^0)}
-d_{\mathrm{lev}}(w, w_i^0),
-\]
+d_{\mathrm{lev}}(w, w_i^0)
+```
 
-where \(\mathcal{C}(w_i^0)\) contains synonyms closer to the original word than \(\tilde{w}_i\), and \(d_{\mathrm{lev}}(\cdot,\cdot)\) denotes the Levenshtein distance.
+where $\mathcal{C}(w_i^0)$ contains synonyms closer to the original word than $\tilde{w}_i$, and $d_{\mathrm{lev}}(\cdot,\cdot)$ denotes the Levenshtein distance.
 
 The candidate is retained only if attack success is preserved; otherwise, the current substitution remains unchanged. This procedure reduces redundant perturbations and improves the naturalness of adversarial examples.
 
 
 
+---
 
 ## Component Configuration
 
