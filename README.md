@@ -90,8 +90,8 @@ denote the maximum local improvement. The candidate set used for substitution is
 \begin{cases}
 \mathcal{C}_i,
 & \mathcal{C}_i \neq \emptyset \land \Delta_i > 0, \\
-\operatorname{Expand}(w_i),
-& \text{otherwise}.
+\mathrm{Expand}(w_i),
+& \mathrm{otherwise}.
 \end{cases}
 ```
 
@@ -106,7 +106,7 @@ Given the current state $I$ and the global best state $I^\star$, PCER stores loc
 ```math
 \mathcal{B}_I =
 \left\{
-I' \in \operatorname{Child}(I)
+I' \in \mathrm{Child}(I)
 \mid
 S(I') > S(I),
 \;
@@ -119,8 +119,8 @@ When backtracking is activated, PCER selects the highest-scoring unused backup b
 ```math
 I_{\mathrm{bt}}
 =
-\arg\max_{I' \in \mathcal{B}_{\mathrm{near}}}
-S(I')
+\underset{I' \in \mathcal{B}_{\mathrm{near}}}{\mathrm{arg\,max}}
+\; S(I')
 ```
 
 A checkpoint is created only when its backup set is nonempty. When the global best remains unchanged for several expansions or the priority queue becomes empty, PCER resumes the search from the nearest available checkpoint. The numbers of retained checkpoints and backtracking operations are bounded to avoid excessive exploration and repeated backtracking.
