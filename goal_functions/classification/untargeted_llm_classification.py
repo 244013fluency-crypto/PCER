@@ -37,7 +37,7 @@ class UntargetedLLMClassification(ClassificationGoalFunction):
         logger = logging.getLogger(self.test_name)
         for text in attacked_text_list:
             logger.info("Current attacked text is: {}".format(text.text))
-            acc = self.inference.predict(text.text)  # 一个列表置信度得分的列表[]
+            acc = self.inference.predict(text.text) 
             logger.info("Current acc:\t")
             logger.info(acc)
             acc_list.append(acc)
