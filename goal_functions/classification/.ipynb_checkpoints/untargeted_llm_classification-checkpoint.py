@@ -45,7 +45,7 @@ class UntargetedLLMClassification(ClassificationGoalFunction):
         for text in attacked_text_list:
             # prompt = prompt.text
             print("Current attacked text is: {}".format(text))
-            acc = self.inference.predict(text)  # 一个列表置信度得分的列表[]
+            acc = self.inference.predict(text) 
             print("Current acc: {:.2f}".format(acc * 100))
             acc_list.append(acc)
         return self._process_model_outputs(attacked_text_list, acc_list)
