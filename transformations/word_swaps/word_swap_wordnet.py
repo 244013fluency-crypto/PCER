@@ -6,8 +6,6 @@ Word Swap by swapping synonyms in WordNet
 
 import nltk
 from nltk.corpus import wordnet
-# 设置 WordNet 数据目录
-# nltk.data.path.append("/media/xmx/data/prom_att2/oewn2024")
 import textattack
 
 from .word_swap import WordSwap
@@ -50,10 +48,10 @@ class WordSwapWordNet(WordSwap):
         return list(synonyms)
 
 class WordSwapOMWEnglish(WordSwap):
-    """同 WordSwapWordNet 的行为，但以 OMW 的 Open English WordNet 为同义词集合。"""
+
 
     def __init__(self):
-        # 保持英文
+
         self.language = "eng"
 
     def _get_replacement_words(self, word, random=False):
