@@ -20,7 +20,7 @@ class BeamAnnealingSearch(SearchMethod):
         self.unk_token = unk_token  # Token used for perturbation
         self.wir_method = wir_method  # Word importance ranking method
         self.alpha = alpha
-        self.scaling_factor = scaling_factor  # 幂次缩放（Power Scaling）
+        self.scaling_factor = scaling_factor 
         self.k = k0  # Current beam width
         self.T = T0  # Current temperature
 
@@ -119,14 +119,14 @@ class BeamAnnealingSearch(SearchMethod):
         return index_order, search_over
 
     def perform_search(self, initial_result):
-        beam = [initial_result.attacked_text]  # 初始束
+        beam = [initial_result.attacked_text]  
         # beam = [initial_result]
-        best_result = initial_result  # 最优结果
+        best_result = initial_result  
         index_order, search_over = self._get_index_order(initial_result.attacked_text)
         i = 0
         while not best_result.goal_status == GoalFunctionResultStatus.SUCCEEDED and i < len(index_order):
             potential_next_beam = []
-            # 1. 为束中的每个文本生成变体
+       
             for text in beam:
                 transformations = self.get_transformations(
                     text, original_text=initial_result.attacked_text,
@@ -135,55 +135,53 @@ class BeamAnnealingSearch(SearchMethod):
                 original_score = self.get_goal_results([text])[0][0].score
                 for transformed_text in transformations:
                     transformed_score = self.get_goal_results([transformed_text])[0][0].score
-                    # 模拟退火策略：决定是否接受该变换
+                  
                     if transformed_score > original_score:
-                        potential_next_beam.append(transformed_text)  # 更优解，直接接受
+                        potential_next_beam.append(transformed_text) 
                     else:
                         accept_prob = np.exp(-(transformed_score - original_score) / self.T)
                         if np.random.rand() < accept_prob:
-                            potential_next_beam.append(transformed_text)  # 以 P(accept) 概率接受
+                            potential_next_beam.append(transformed_text)  
             i += 1
             if len(potential_next_beam) == 0:
                 return best_result
-            # 计算每个候选的得分并选择最优个体
+           
             results, search_over = self.get_goal_results(potential_next_beam)
             scores = np.array([r.score for r in results])
-            # 获取当前最优得分
+            
             current_best_score = best_result.score
-            # 获取当前潜在候选中的最优得分
+            
             potential_best_score = np.max(scores)
-            # 只有当潜在最优得分高于当前最优得分时才替换
+           
             if potential_best_score > current_best_score:
                 best_result = results[scores.argmax()]
             if search_over:
                 return best_result
             s_star = results[scores.argmax()].attacked_text
-            # 计算信息增益并动态调整束宽
+            
             H_B = self.information_gain(scores)
             self.k = int(max(self.k_min, min(self.k_max, self.k * (1 + H_B / self.k_max), self.k + self.delta)))
             P_select_s_star = np.exp(-potential_best_score) / np.sum(np.exp(-scores))
-            # 计算最终保留 s_star 的概率
+           
             retain_prob = self.pe + (1 - self.pe) * P_select_s_star
-            # 以该概率决定是否保留 s_star
+           
             new_beam = [s_star] if np.random.rand() < retain_prob else []
             remaining_candidates = [s for s in potential_next_beam if s != s_star]
-            # 6. 更新束并继续下一轮搜索
-            # 计算选择概率 P_select(s)
-            # 获取 remaining_candidates 的得分
+           
             remaining_scores = np.array([r.score for r in results if r.attacked_text in remaining_candidates])
-            # 将 best_result 添加到 remaining_candidates
+            
             # --------------------------------------------------------------
             if best_result.attacked_text not in remaining_candidates:
                 remaining_candidates.append(best_result.attacked_text)
-                remaining_scores = np.append(remaining_scores, best_result.score)  # 加入 best_result 的得分
+                remaining_scores = np.append(remaining_scores, best_result.score)  
             # ---------------------------------------------------------------------
             remaining_scores = np.maximum(remaining_scores, 1e-5)
             unnormalized_probs = np.power(remaining_scores, self.scaling_factor)
-            # # 重新计算选择概率 P_select
+           
             # unnormalized_probs = np.exp(-self.alpha * remaining_scores / self.T)
-            # # 归一化使得 P_select(s) 成为概率分布
+         
             P_select = unnormalized_probs / np.sum(unnormalized_probs)
-            # 从 remaining_candidates 采样 num_remaining 个
+
             num_remaining = min(self.k - len(new_beam), len(remaining_candidates))
             if num_remaining > 0:
                 sampled_candidates = np.random.choice(
@@ -191,7 +189,7 @@ class BeamAnnealingSearch(SearchMethod):
                 )
                 new_beam += list(sampled_candidates)
             beam = new_beam
-            # 7. 更新温度
+          
             self.T = self.update_temperature(i)
 
         return best_result
