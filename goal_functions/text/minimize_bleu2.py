@@ -60,12 +60,12 @@ class MinimizeBleu(TextToTextGoalFunction):
         logger = logging.getLogger(self.test_name)
         for text in attacked_text_list:
             logger.info("Current attacked text is: {}".format(text.text))
-            # 预测结果
+           
             model_output = self.inference.predict(text.text)
-            # 检查预测结果是否为 None
+          
             if model_output is None:
                 logger.warning("Model output is None for input: {}".format(text.text))
-                bleu_score = 0.1  # 设置 BLEU 分数为 0.1
+                bleu_score = 0.1 
             else:
                 model_output_at = textattack.shared.AttackedText(model_output)
                 ground_truth_at = textattack.shared.AttackedText(self.ground_truth_output)
